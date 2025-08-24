@@ -62,8 +62,8 @@ root = tk.Tk()
 root.attributes('-fullscreen', True)
 root.config(bg='black')
 
-music = 'bones.mp3'
-wallpaper_image = 'wall.png'
+music = 'bones_aud.mp3'
+wallpaper_image = 'bones_wall.png'
 tile_texture = 'tile_color.png'
 tile_width = 60
 tile_height = 150
