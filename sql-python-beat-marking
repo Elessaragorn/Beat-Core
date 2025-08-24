@@ -1,0 +1,58 @@
+import mysql.connector as con
+import tkinter as tk
+import threading
+from playsound import playsound
+import time
+
+# === MUSIC SETTINGS ===
+filename = 'worried_aud.mp3' #enter audio file name
+tap_times = []
+start_time = None
+
+# === MYSQL CONNECTION ===
+mycon = con.connect(user='root', host='localhost', passwd='parabellum', database='school')
+if mycon.is_connected():
+    print('✅ Connected to MySQL')
+
+# === MUSIC PLAY THREAD ===
+def play_music():
+    global start_time
+    start_time = time.time()
+    playsound(filename)
+
+# === KEYPRESS HANDLER ===
+def on_keypress(event):
+    if start_time is None:
+        return
+
+    if event.char == '0':
+        tap_time = time.time() - start_time
+        tap_times.append(tap_time)
+        print(f"Tapped at {tap_time:.3f} seconds")
+
+    elif event.char == '1':
+        print('\nSending data to MySQL...')
+        cursor = mycon.cursor()
+        for i in tap_times:
+            rounded_time = f"{i:.4f}"  # format float to string with 4 decimal places
+            query = 'INSERT INTO WORRIED (time) VALUES (%s)' #enter table name
+            data = (rounded_time,)
+            cursor.execute(query, data)
+        mycon.commit()
+        cursor.close()
+        print('✅ Data sent successfully.')
+
+
+# === GUI SETUP ===
+root = tk.Tk()
+root.title("Beat Tapper (Press 0 to Tap, 1 to Save)")
+
+label = tk.Label(root, text="Press '0' to tap beats\nPress '1' to send to MySQL", font=("Arial", 14))
+label.pack(padx=20, pady=40)
+
+root.bind("<Key>", on_keypress)
+
+# Start music thread
+threading.Thread(target=play_music, daemon=True).start()
+
+root.mainloop()
