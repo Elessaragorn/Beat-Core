@@ -1,0 +1,109 @@
+import tkinter as tk
+import time
+import random
+import threading
+from playsound import playsound
+import mysql.connector as con
+from PIL import Image, ImageTk
+
+def game_loop():
+    start_time = time.time()
+    beats = 0
+    total_beats = len(beat_timings)
+    while beats < total_beats:
+        gameplay_time = time.time() - start_time
+        if gameplay_time >= beat_timings[beats][0]:
+            spawn_tile()
+            beats += 1
+        time.sleep(0.001)
+
+def spawn_tile():
+    column = random.choice([0, 1, 2])
+    x_position = column_positions[column]
+    tile_bg = canvas.create_image(x_position, 0, image=tile_photoimage, anchor='nw')
+    tiles.append([tile_bg, column])
+
+def tile_motion():
+    global missed
+    for tile, column in tiles[:]:
+        canvas.move(tile, 0, tile_speed)
+        x1, y1 = canvas.coords(tile)
+        if y1 + tile_height >= screen_height:
+            canvas.delete(tile)
+            tiles.remove([tile, column])
+            missed += 1
+    root.after(20, tile_motion)
+
+def on_key_press(event):
+    global hit, extra_hit
+    if event.char == '4':
+        column_to_check = 0
+    elif event.char == '5':
+        column_to_check = 1
+    elif event.char == '6':
+        column_to_check = 2
+    else:
+        return
+
+    for tile, col in tiles[:]:
+        if col == column_to_check:
+            canvas.delete(tile)
+            tiles.remove([tile, col])
+            hit += 1
+            return
+    extra_hit += 1
+
+def play_music():
+    time.sleep(2/3)
+    playsound(music)
+
+root = tk.Tk()
+root.attributes('-fullscreen', True)
+root.config(bg='black')
+
+music = 'sapphire_aud.mp3'
+wallpaper_image = 'wall.png'
+tile_texture = 'tile_color.png'
+tile_width = 60
+tile_height = 150
+tile_speed = 11
+database_name = 'school'
+table = 'SAPPHIRE'
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+beat_timings = []
+missed = 0
+hit = 0
+extra_hit = 0
+
+mycon = con.connect(user='root', host='localhost', passwd='parabellum', database=database_name)
+cur = mycon.cursor()
+cur.execute(f'SELECT TIME FROM {table}')
+beat_timings = cur.fetchall()  # list of tuples
+cur.close()
+mycon.close()
+
+canvas = tk.Canvas(root, width=screen_width, height=screen_height, highlightthickness=0, bd=0)
+canvas.pack()
+
+wallpaper_open = Image.open(wallpaper_image).resize((screen_width, screen_height))
+wallpaper_photoimage = ImageTk.PhotoImage(wallpaper_open)
+canvas.create_image(0, 0, anchor='nw', image=wallpaper_photoimage)
+
+space_btw_tiles = 40
+screen_center = screen_width // 2
+tile_left = screen_center - (tile_width + space_btw_tiles + tile_width / 2)
+tile_center = screen_center - tile_width / 2
+tile_right = screen_center + (tile_width / 2 + space_btw_tiles)
+column_positions = [tile_left, tile_center, tile_right]
+
+tiles = []
+tile_open = Image.open(tile_texture).resize((tile_width, tile_height))
+tile_photoimage = ImageTk.PhotoImage(tile_open)
+
+threading.Thread(target=play_music, daemon=True).start()
+threading.Thread(target=game_loop, daemon=True).start()
+
+root.bind('<Key>', on_key_press)
+tile_motion()
+root.mainloop()
