@@ -1,0 +1,114 @@
+import tkinter as tk
+import random
+import threading
+from playsound import playsound
+import time
+import mysql.connector as con
+from PIL import Image, ImageTk
+
+# === Music file ===
+file_name = 'squidgame.mp3'
+
+def play_sound():
+    time.sleep(2/3)
+    playsound(file_name)
+
+# === Main window ===
+root = tk.Tk()
+root.title("Magic Tiles Mini")
+root.attributes("-fullscreen", True)
+root.config(bg='black')
+
+# Get screen dimensions
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+
+# === Fetch time marks from SQL ===
+mycon = con.connect(user='root', host='localhost', passwd='parabellum', database='school')
+cursor = mycon.cursor()
+cursor.execute("SELECT time FROM SQUIDGAME ORDER BY CAST(time AS DECIMAL(10,4)) ASC")
+results = cursor.fetchall()
+time_marks = [float(row[0]) for row in results]
+cursor.close()
+mycon.close()
+
+# === Canvas ===
+canvas = tk.Canvas(root, width=screen_width, height=screen_height, highlightthickness=0, bd=0)
+canvas.pack()
+
+# === Wallpaper background ===
+wallpaper_img = Image.open("wall.png").resize((screen_width, screen_height))
+wallpaper_tk = ImageTk.PhotoImage(wallpaper_img)
+canvas.create_image(0, 0, anchor='nw', image=wallpaper_tk)
+
+# === Tile settings ===
+tile_width = 60
+tile_height = 150
+tile_speed = 12
+
+# Calculate column positions centered
+columns = []
+space_between = 40
+total_width = tile_width * 3 + space_between * 2
+start_x = (screen_width - total_width) // 2
+for i in range(3):
+    x = start_x + i * (tile_width + space_between)
+    columns.append(x)
+
+tiles = []
+
+# === Load tile image ===
+tile_image_path = 'tile_color.png'
+tile_base = Image.open(tile_image_path).resize((tile_width, tile_height))
+tile_img = ImageTk.PhotoImage(tile_base)
+
+def spawn_tile():
+    col_index = random.choice([0, 1, 2])
+    x = columns[col_index]
+    img_id = canvas.create_image(x, 0, image=tile_img, anchor='nw')
+    tiles.append((img_id, col_index))
+
+def move_tiles():
+    for tile, col in tiles[:]:
+        canvas.move(tile, 0, tile_speed)
+        x1, y1 = canvas.coords(tile)
+        if y1 + tile_height >= screen_height:
+            canvas.delete(tile)
+            tiles.remove((tile, col))
+            print("Missed!")
+    root.after(20, move_tiles)
+
+def game_loop():
+    start_time = time.time()
+    index = 0
+    total = len(time_marks)
+    while index < total:
+        elapsed = time.time() - start_time
+        if elapsed >= time_marks[index]:
+            root.after_idle(spawn_tile)
+            index += 1
+        time.sleep(0.001)
+
+def on_key_press(event):
+    if event.char == '4':
+        column_to_check = 0
+    elif event.char == '5':
+        column_to_check = 1
+    elif event.char == '6':
+        column_to_check = 2
+    else:
+        return
+    for tile, col in tiles[:]:
+        if col == column_to_check:
+            canvas.delete(tile)
+            tiles.remove((tile, col))
+            return
+    print("No tile in that column to hit!")
+
+# Start threads
+threading.Thread(target=play_sound, daemon=True).start()
+threading.Thread(target=game_loop, daemon=True).start()
+
+root.bind("<Key>", on_key_press)
+move_tiles()
+root.mainloop()
