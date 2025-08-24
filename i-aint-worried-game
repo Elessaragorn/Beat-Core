@@ -7,7 +7,7 @@ import mysql.connector as con
 from PIL import Image, ImageTk
 
 # === Music file ===
-file_name = 'worried_aud.mp3'
+file_name = 'i_aint_worried_aud.mp3'
 
 def play_sound():
     time.sleep(2/3)
@@ -37,7 +37,7 @@ canvas = tk.Canvas(root, width=screen_width, height=screen_height, highlightthic
 canvas.pack()
 
 # === Wallpaper background ===
-wallpaper_img = Image.open("wall.png").resize((screen_width, screen_height))
+wallpaper_img = Image.open("i_aint_worried_wall.png").resize((screen_width, screen_height))
 wallpaper_tk = ImageTk.PhotoImage(wallpaper_img)
 canvas.create_image(0, 0, anchor='nw', image=wallpaper_tk)
 
