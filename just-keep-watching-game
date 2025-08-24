@@ -61,8 +61,8 @@ root = tk.Tk()
 root.attributes('-fullscreen', True)
 root.config(bg='black')
 
-music = 'keepwatching_aud.mp3'
-wallpaper_image = 'wall.png'
+music = 'just_keep_watching_aud.mp3'
+wallpaper_image = 'just_keep_watching_wall.png'
 tile_texture = 'tile_color.png'
 tile_width = 60
 tile_height = 150
