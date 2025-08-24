@@ -1,0 +1,68 @@
+import tkinter as tk
+from PIL import Image, ImageTk
+from playsound import playsound
+import threading
+
+def play_music():
+    playsound(music)
+
+def start_game(event=None):
+    canvas.delete("all")
+
+    home2_open = Image.open(music_choice).resize((screen_width, screen_height))
+    home2_photoimage = ImageTk.PhotoImage(home2_open)
+    
+    canvas.image = home2_photoimage
+    canvas.create_image(0, 0, anchor='nw', image=home2_photoimage)
+
+    click_worried = canvas.create_rectangle(80, 80, 465, 365, fill="", outline="")
+    canvas.tag_bind(click_worried, "<Button-1>", start_worried)
+
+    click_bones = canvas.create_rectangle(500, 80, 880, 365, fill="", outline="")
+    canvas.tag_bind(click_bones, "<Button-1>", start_bones)
+
+    click_squidgame = canvas.create_rectangle(80, 400, 465, 690, fill="", outline="")
+    canvas.tag_bind(click_squidgame, "<Button-1>", start_squidgame)
+
+    click_watching = canvas.create_rectangle(500, 400, 880, 690, fill="", outline="")
+    canvas.tag_bind(click_watching, "<Button-1>", start_watching)
+
+    click_sapphire = canvas.create_rectangle(920, 80, 1285, 690, fill="", outline="")
+    canvas.tag_bind(click_sapphire, "<Button-1>", start_sapphire)
+
+def start_worried(event=None):
+    pass
+def start_bones(event=None):
+    pass
+def start_squidgame(event=None):
+    pass
+def start_watching(event=None):
+    pass
+def start_sapphire(event=None):
+    pass
+
+wallpaper = 'home1.png'
+music_choice = 'home2.png'
+music = 'home_music.mp3'
+
+root = tk.Tk()
+root.attributes('-fullscreen', True)
+root.config(bg='black')
+
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+
+canvas = tk.Canvas(root, width=screen_width, height=screen_height, highlightthickness=0, bd=0)
+canvas.pack()
+
+wallpaper_open = Image.open(wallpaper).resize((screen_width, screen_height))
+wallpaper_photoimage = ImageTk.PhotoImage(wallpaper_open)
+canvas.create_image(0, 0, anchor='nw', image=wallpaper_photoimage)
+
+canvas.image = wallpaper_photoimage
+
+click_area = canvas.create_rectangle(580, 550, 780, 600, fill="", outline="")
+canvas.tag_bind(click_area, "<Button-1>", start_game)
+
+threading.Thread(target=play_music, daemon=True).start()
+root.mainloop()
